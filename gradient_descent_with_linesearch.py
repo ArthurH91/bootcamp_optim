@@ -3,20 +3,35 @@ import matplotlib.pyplot as plt
 
 # Definition of functions
 
-# Basic function
+# Quadratic function
 
 
-def function(X): return X[0]**2 + X[1]**2
+def basic_function(X): return X[0]**2 + X[1]**2
 
 
-def grad_function(X): return np.array([2*X[0], 2*X[1]])
+def grad_basic_function(X): return np.array([2*X[0], 2*X[1]])
 
 
 def function_for_plotting(X1, X2):
     "FOR PLOTTING Returns the value of function"
     return (np.array(X1)**2 + np.array(X2)**2)
 
-# For printing
+# Rosenbrock function
+
+
+def compute_rosenbrock_function(X: np.ndarray, a: float = 1., b: float = 1.):
+    "Returns the value of the banana of rosenbrock given a x, y and a and b parameters"
+    x, y = X
+    return (a - x)**2 + b * (y - x ** 2)**2
+
+
+def compute_grad_rosenbrock_function(X: np.ndarray, a: float = 1., b: float = 1.):
+    "Returns the value of the gradient of the banana of rosenbrock given a x,y and 2 parameters a and b"
+    x, y = X
+    return np.array([2 * (x-a) - 4 * b * x * (y - x**2), 2 * b * (y - x**2)])
+
+
+# Functions for printing
 
 
 def gradient_descent_print_header():
@@ -52,12 +67,20 @@ def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
     f_iter = f(X_init)  # Calculating the initial cost of the function
     g_iter = grad_f(X_init)  # Calculating the initial value of the gradient
     iter = 0  # Iteration of the problem
-    alpha = 1e-2  # Alpha used for the steps
+    alpha = 1  # Alpha used for the steps
     X_iter = X_init
     list_f = []
     while np.linalg.norm(g_iter) > eps and iter < MAX_ITER:
+
+        # Printing the iteration and its characteristics
         gradient_descent_print_iteration(
             iter, f_iter, np.linalg.norm(g_iter), alpha)
+
+        # Computing the approximative optimum of the alpha by using a linesearch
+        # alpha = backtracking_line_search(f, grad_f, - grad_f(X_iter), X_iter)
+        alpha = backtracking_linesearch(f, grad_f, f_iter, g_iter, X_iter)
+
+        # Computing the new X_iter and the new value of the cost function & its gradient
         X_iter = X_iter - alpha * grad_f(X_iter)
         f_iter = f(X_iter)
         g_iter = grad_f(X_iter)
@@ -67,15 +90,45 @@ def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
     return X_iter, f_iter, list_f
 
 
+# Linesearch
+
+
+def backtracking_linesearch(f, g, f_iter, grad_f_iter, X_iter):
+    """Backtracking line search using Armijo-Goldstein condition.
+
+    Arguments:
+        f -- function to minimize
+        g -- gradient of the function
+        f_iter -- value of the function at the iter-th step
+        grad_f_iter -- value of the gradient of the function at the iter-th step
+        X_iter -- value of X at the iter-th step
+
+    Returns:
+        alpha -- Approximative value of the alpha
+    """
+    max_it = 20
+    it = 0
+    alpha = 1
+    alpha_decrease = 0.1
+    phi = 1e-2
+    # p_k in Nocedal, direction of the linesearch (- gradient for the gradient descent)
+    p_iter = - grad_f_iter
+    while it < max_it:
+        if f_iter - f(X_iter + alpha * p_iter) >= - alpha * phi * grad_f_iter.T @ p_iter:
+            return alpha
+        alpha *= alpha_decrease
+        it += 1
+    return alpha
+
+
 if __name__ == "__main__":
 
     X_init = np.array([2, 3])  # Initial start of the function
     eps = 1e-6  # Tolerance
-    MAX_ITER = 1000  # Number max of iteration
-
+    MAX_ITER = 10000  # Number max of iteration
     gradient_descent_print_header
     X, f_iter, list_f = grad_descent(
-        function, grad_function, X_init, eps, MAX_ITER)
+        basic_function, grad_basic_function, X_init, eps, MAX_ITER)
 
     # Plotting the results
     x1 = np.linspace(-10, 10)
