@@ -6,15 +6,15 @@ import matplotlib.pyplot as plt
 # Quadratic function
 
 
-def basic_function(X): return X[0]**2 + X[1]**2
+def basic_function(X): return 4*X[0]**2 + X[1]**2
 
 
-def grad_basic_function(X): return np.array([2*X[0], 2*X[1]])
+def grad_basic_function(X): return np.array([8*X[0], 2*X[1]])
 
 
 def function_for_plotting(X1, X2):
     "FOR PLOTTING Returns the value of function"
-    return (np.array(X1)**2 + np.array(X2)**2)
+    return (4*np.array(X1)**2 + np.array(X2)**2)
 
 # Rosenbrock function
 
@@ -47,7 +47,7 @@ def gradient_descent_print_iteration(iter, f_iter, norm_g_iter, alpha):
 # Gradient descent
 
 
-def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
+def grad_descent_with_linesearch(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
     """ Gradient descent of the f function.
 
     Inputs : 
@@ -108,13 +108,13 @@ def backtracking_linesearch(f, g, f_iter, grad_f_iter, X_iter):
     """
     max_it = 20
     it = 0
-    alpha = 1
-    alpha_decrease = 0.1
-    phi = 1e-2
+    alpha = 1 # Start of the linesearch
+    alpha_decrease = 0.1 # Decreasement at each step of the linesearch
+    phi = 1e-2 # See Nocedal 
     # p_k in Nocedal, direction of the linesearch (- gradient for the gradient descent)
     p_iter = - grad_f_iter
     while it < max_it:
-        if f_iter - f(X_iter + alpha * p_iter) >= - alpha * phi * grad_f_iter.T @ p_iter:
+        if f_iter - f(X_iter + alpha * p_iter) >= - alpha * phi * grad_f_iter.T @ p_iter: # Armijo's condition
             return alpha
         alpha *= alpha_decrease
         it += 1
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     eps = 1e-6  # Tolerance
     MAX_ITER = 10000  # Number max of iteration
     gradient_descent_print_header
-    X, f_iter, list_f = grad_descent(
+    X, f_iter, list_f = grad_descent_with_linesearch(
         basic_function, grad_basic_function, X_init, eps, MAX_ITER)
 
     # Plotting the results
