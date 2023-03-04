@@ -12,6 +12,19 @@ def function_for_plotting(X1,X2):
     "FOR PLOTTING Returns the value of function"
     return (np.array(X1)**2 + np.array(X2)**2)
 
+## For plotting 
+
+
+def gradient_descent_print_header():
+    print("{:^7}".format("Iter.") + " | " + "{:^10}".format("f(x)") +
+          " | " + "{:^10}".format("||df(x)||") + " | " + "{:^10}".format("||d||"))
+
+
+def gradient_descent_print_iteration(iter, f_iter, norm_g_iter, alpha):
+
+    print(("%7d" % iter) + " | " + ("%.4e" % f_iter) + " | " +
+          ("%.4e" % norm_g_iter) + " | " + ("%.4e" % alpha))
+
 ## Gradient descent 
 
 def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
@@ -31,20 +44,21 @@ def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
     f_min (np.ndarray): Value of the minimum of the function 
     """
 
-    f_iter = f(X_init) # Calculating the initial cost of the function
-    g_iter = grad_f(X_init) # Calculating the initial value of the gradient 
-    iter = 0 # Iteration of the problem
-    alpha = 1e-2 # Alpha used for the steps 
-    X = X_init
+    f_iter = f(X_init)  # Calculating the initial cost of the function
+    g_iter = grad_f(X_init)  # Calculating the initial value of the gradient
+    iter = 0  # Iteration of the problem
+    alpha = 1e-2  # Alpha used for the steps
+    X_iter = X_init
     list_f = []
-    while np.linalg.norm(g_iter)>eps and iter < MAX_ITER:
-        X = X - alpha * grad_f(X)
-        f_iter = f(X)
-        g_iter = grad_f(X)
-        print(f"Iteration n°{iter} \n Cost function = {f_iter}")
-        iter +=1
+    while np.linalg.norm(g_iter) > eps and iter < MAX_ITER:
+        gradient_descent_print_iteration(iter, f_iter, np.linalg.norm(g_iter),alpha)
+        X_iter = X_iter - alpha * grad_f(X_iter)
+        f_iter = f(X_iter)
+        g_iter = grad_f(X_iter)        
+        iter += 1
+
         list_f.append(f_iter)
-    return X, f_iter, list_f
+    return X_iter, f_iter, list_f
 
 
 
@@ -53,6 +67,8 @@ if __name__ == "__main__":
     X_init = np.array([2,3]) # Initial start of the function
     eps = 1e-6 # Tolerance
     MAX_ITER = 1000 # Number max of iteration 
+
+    gradient_descent_print_header
     X,f_iter, list_f = grad_descent(function, grad_function, X_init, eps, MAX_ITER)
 
 
