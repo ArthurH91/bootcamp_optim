@@ -1,96 +1,130 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Definition of functions
+def gradient_descent_exceeded_iterations(cnt_iter : int, max_iter : int):
+    """Determines if the algorithm exceeded maximum iteration count.
 
-# Basic function
+    Args:
+        cnt_iter (int): Iteration counter.
+        max_iter (int): Maximum number of iterations.
 
+    Returns:
+        bool: Did the iteration counter exceed the maximum number of iterations?
+    """
+    return cnt_iter > max_iter
 
-def function(X): return X[0]**2 + X[1]**2
+def gradient_descent_convergence_criterion(norm_gfval_k : float, eps : float):
+    """Determines if the algorithm attained the desired tolerance in satisfying the convergence conditions.
 
+    Args:
+        norm_gfval_k (float): Norm of the gradient.
+        eps (float): Epsilon tolerance.
 
-def grad_function(X): return np.array([2*X[0], 2*X[1]])
-
-
-def function_for_plotting(X1, X2):
-    "FOR PLOTTING Returns the value of function"
-    return (np.array(X1)**2 + np.array(X2)**2)
-
-# For printing
-
+    Returns:
+        bool: Is the norm of the gradient smaller than the tolerance?
+    """
+    return norm_gfval_k < eps
 
 def gradient_descent_print_header():
-    print("{:^7}".format("Iter.") + " | " + "{:^10}".format("f(x)") +
-          " | " + "{:^10}".format("||df(x)||") + " | " + "{:^10}".format("||d||"))
+    """Prints the header of the optimization textual output.
+    """
+    print("{:<7}".format("Iter.") + " | " + "{:^10}".format("f(x)") + " | " + "{:^10}".format("||df(x)||") + " | " + "{:^10}".format("||d||"))
+
+def gradient_descent_print_iteration(cnt_iter : int, fval_k : float, norm_gfval_k : float, step_size_k : float):
+    """Prints the information of a single iteration of the gradient descent algorithm.
+
+    Args:
+        cnt_iter (int): Iteration counter.
+        fval_k (float): Function value at current iterate.
+        norm_gfval_k (float): Gradient norm value at current iterate.
+        step_size_k (float): Size of the step at current iterate.
+    """
+    print(("%7d" % cnt_iter) + " | " + ("%.4e" % fval_k) + " | " + ("%.4e" % norm_gfval_k) + " | " + ("%.4e" % step_size_k))
+
+def gradient_descent_print_output(cnt_iter : int, fval_k : float, norm_gfval_k : float, eps : float, max_iter : int):
+    """Prints the final message of the search.
+
+    Args:
+        cnt_iter (int): Iteration counter.
+        fval_k (float): Function value at current iterate.
+        norm_gfval_k (float): Gradient norm value at current iterate.
+        eps (float): Tolerance on the first order optimality condition for convergence.
+        max_iter (int): Maximum number of iterations to perform.
+    """
+    # If the algorithm converged
+    if gradient_descent_convergence_criterion(norm_gfval_k=norm_gfval_k, eps=eps):
+        print()
+        print("Gradient descent successfully converged in %d iterations." % cnt_iter)
+        print("Optimal function value: %.4e." % fval_k)
+        print("Optimality conditions : %.4e." % norm_gfval_k)
+
+    # If the algorithm exceeded the iterations
+    if gradient_descent_exceeded_iterations(cnt_iter=cnt_iter, max_iter=max_iter):
+        print()
+        print("Gradient descent exceeded the maximum number (%d) of iterations." % max_iter)
+        print("Current function value: %.4e." % fval_k)
+        print("Current optimality conditions : %.4e." % norm_gfval_k)
 
 
-def gradient_descent_print_iteration(iter, f_iter, norm_g_iter, alpha):
+def gradient_descent(f, gf, alpha : float, x0 : np.ndarray, eps=1e-4, max_iter=1e3):
+    """ Performs the constant step-length gradient descent optimization algorithm on the function f.
 
-    print(("%7d" % iter) + " | " + ("%.4e" % f_iter) + " | " +
-          ("%.4e" % norm_g_iter) + " | " + ("%.4e" % alpha))
+    Args:
+        f (function): Function handle of the function to minimize.
+        gf (function): Function handle of the gradient of the function to minimize.
+        alpha (float): Constant step size.
+        x0 (np.ndarray): Initial guess for the algorithm.
+        eps (float, optional): Tolerance on the first order optimality condition for convergence. Defaults to 1e-4.
+        max_iter (int, optional): Maximum number of iterations to perform. Defaults to 1e3.
 
-# Gradient descent
-
-
-def grad_descent(f, grad_f, X_init: np.ndarray, eps: float, MAX_ITER: int):
-    """ Gradient descent of the f function.
-
-    Inputs : 
-
-    f (function): Function to minimize.
-    g (function): Gradient of the function.
-    X_init (np.ndarray): Initial start of the function
-    eps (float): Tolerance.
-    MAX_ITER (int): Number of iteration maximum before not converging.
-
-    Output : 
-
-    X_min (np.ndarray): Coordinates of the minimum of the function
-    f_min (np.ndarray): Value of the minimum of the function 
+    Returns:
+        x: Solution of the descent search.
+        fval: Function value at the solution of the search.
+        gfval: Function gradient value at the solution of the search.
     """
 
-    f_iter = f(X_init)  # Calculating the initial cost of the function
-    g_iter = grad_f(X_init)  # Calculating the initial value of the gradient
-    iter = 0  # Iteration of the problem
-    alpha = 1e-2  # Alpha used for the steps
-    X_iter = X_init
-    list_f = []
-    while np.linalg.norm(g_iter) > eps and iter < MAX_ITER:
-        gradient_descent_print_iteration(
-            iter, f_iter, np.linalg.norm(g_iter), alpha)
-        X_iter = X_iter - alpha * grad_f(X_iter)
-        f_iter = f(X_iter)
-        g_iter = grad_f(X_iter)
-        iter += 1
+    # Print header
+    gradient_descent_print_header()
 
-        list_f.append(f_iter)
-    return X_iter, f_iter, list_f
+    # Initialize counter of iterations
+    cnt_iter = 0
+    # Initialize guess
+    x = x0
+    # Initialize stepsize
+    step_size_k = alpha
+
+    # Start
+    while True:
+
+        # Evaluate function
+        fval_k = f(x)
+        # Evaluate gradient
+        gfval_k = gf(x)
+        # Evaluate norm of gradient
+        norm_gfval_k = np.linalg.norm(gfval_k)
+
+        # Print 
+        gradient_descent_print_iteration(cnt_iter, fval_k, norm_gfval_k, step_size_k)
+        # Every 30 iterations print header
+        if cnt_iter % 30 == 29:
+            gradient_descent_print_header()
+
+        # Check stopping conditions
+        if gradient_descent_convergence_criterion(norm_gfval_k, eps) or gradient_descent_exceeded_iterations(cnt_iter, max_iter):
+            break
+
+        # Update solution
+        x = x - step_size_k * gfval_k
+
+        # Update iteration counter
+        cnt_iter += 1
+    
+    # Print output message
+    gradient_descent_print_output(cnt_iter, fval_k, norm_gfval_k, eps, max_iter)
+    
+    # Return
+    return x, fval_k, gfval_k
 
 
 if __name__ == "__main__":
-
-    X_init = np.array([2, 3])  # Initial start of the function
-    eps = 1e-6  # Tolerance
-    MAX_ITER = 1000  # Number max of iteration
-
-    gradient_descent_print_header
-    X, f_iter, list_f = grad_descent(
-        function, grad_function, X_init, eps, MAX_ITER)
-
-    # Plotting the results
-    x1 = np.linspace(-10, 10)
-    x2 = np.linspace(-10, 10)
-    X1, X2 = np.meshgrid(x1, x2)
-    fig = plt.figure()
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax1.plot_surface(X1, X2, function_for_plotting(X1, X2))
-    plt.xlabel("X value")
-    plt.ylabel("Y value")
-    ax1.set_zlabel("F(X,Y)")
-
-    ax2 = fig.add_subplot(122)
-    ax2.plot(list_f)
-    plt.xlabel("Number of iterations")
-    plt.ylabel("Value of the function")
-    plt.title(" Basic function")
-    plt.show()
+    gradient_descent_print_header()
+    gradient_descent_print_iteration(0, 12.3123, 0.23123, 1)
